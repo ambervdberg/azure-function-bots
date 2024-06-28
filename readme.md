@@ -1,6 +1,6 @@
 # Azure Functions - OpenAI API
 
-This project contains serverless Azure Functions that interact with the OpenAI API to generate IT-related poems. The goal is to experiment with the OpenAI API.
+This project contains serverless Azure Functions that interact with the OpenAI API. The goal is to experiment with the OpenAI API.
 
 ## Features
 
@@ -8,6 +8,7 @@ This project contains serverless Azure Functions that interact with the OpenAI A
 - **OpenAI API**: Utilizes the OpenAI API to generate creative and humorous poems about information technology.
   - Supports: [chat.comletions](https://platform.openai.com/docs/api-reference/chat) with streamed and non streamed responses.
   - Other components of the OpenAI API will be added later with different bots.
+- **Integration with Notion.** [Notion Readme](src/functions/notion/notion.md)
 
 ## Getting Started
 
@@ -31,6 +32,7 @@ This project contains serverless Azure Functions that interact with the OpenAI A
     {
       "IsEncrypted": false,
       "Values": {
+        "NOTION_DEFAULT_WORKSPACE": "MYWORKSPACE",
         "AzureWebJobsStorage": "UseDevelopmentStorage=true",
         "FUNCTIONS_WORKER_RUNTIME": "node",
         "AzureWebJobsFeatureFlags": "EnableWorkerIndexing",
