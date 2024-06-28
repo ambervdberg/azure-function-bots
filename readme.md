@@ -33,6 +33,7 @@ This project contains serverless Azure Functions that interact with the OpenAI A
       "IsEncrypted": false,
       "Values": {
         "NOTION_DEFAULT_WORKSPACE": "MYWORKSPACE",
+        "NOTION_API_KEY_MYWORKSPACE": "secret_1234567890qwertyuiop",
         "AzureWebJobsStorage": "UseDevelopmentStorage=true",
         "FUNCTIONS_WORKER_RUNTIME": "node",
         "AzureWebJobsFeatureFlags": "EnableWorkerIndexing",
