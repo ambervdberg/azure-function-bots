@@ -5,6 +5,8 @@
 ### search
 Searches the notion workspace for relevant pages and databases based on the given query.
 
+Uses the page and database functions to retrieve the content.
+
 `http://localhost:7071/api/notion/search?workspace=myworkspace&query=stuff`
 
 ### page
