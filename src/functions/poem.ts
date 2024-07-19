@@ -30,7 +30,7 @@ export async function poem(request: HttpRequest, context: InvocationContext): Pr
       role: 'user',
       content: message
     }],
-    model: 'gpt-4o',
+    model: process.env.GPT_MODEL,
     stream: true
   });
 
