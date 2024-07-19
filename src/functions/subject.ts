@@ -25,7 +25,7 @@ export async function subject(request: HttpRequest, context: InvocationContext):
         role: 'user',
         content: process.env.SUBJECT_USER_MESSAGE
       }],
-      model: 'gpt-4o',
+      model: process.env.GPT_MODEL,
       stream: false
     });
 
