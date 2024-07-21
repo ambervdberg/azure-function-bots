@@ -8,7 +8,7 @@ This project contains serverless Azure Functions that interact with the OpenAI A
 - **OpenAI API**: Utilizes the OpenAI API to generate creative and humorous poems about information technology.
   - Supports: [chat.comletions](https://platform.openai.com/docs/api-reference/chat) with streamed and non streamed responses.
   - Other components of the OpenAI API will be added later with different bots.
-- **Integration with Notion.** [Notion Readme](src/functions/notion/notion.md)
+- **Integration with Notion.** [Notion Readme](src/functions/notion-api/notion.md)
 
 ## Getting Started
 
@@ -66,7 +66,7 @@ This project contains serverless Azure Functions that interact with the OpenAI A
 
 #### Notion API
 
-> **Note**: See the [Notion Readme](src/functions/notion/notion.md) for more information.
+> **Note**: See the [Notion Readme](src/functions/notion-api/notion.md) for more information.
 
 - **database**: http://localhost:7071/api/notion/database
 
