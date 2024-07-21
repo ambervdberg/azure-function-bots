@@ -26,11 +26,6 @@ export async function getDatabase(
   const id: string | null = request.query.get('id');
   const raw: boolean = request.query.has('raw');
   const apiKey: string | undefined = getNotionApiKey(workspace);
-  const password: string | null = request.query.get('password');
-
-  if (password !== process.env.NOTION_API_PASSWORD) {
-    return { status: 401, body: 'Unauthorized' };
-  }
 
   if (!apiKey) {
     return { status: 401, body: UNAUTHORIZED };
@@ -70,7 +65,7 @@ app.setup({ enableHttpStream: true });
 
 app.http('database', {
   methods: ['GET', 'POST'],
-  authLevel: 'anonymous',
+  authLevel: 'function',
   route: 'notion/database',
   handler: getDatabase
 });

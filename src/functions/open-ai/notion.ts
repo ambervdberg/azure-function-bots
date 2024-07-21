@@ -45,11 +45,6 @@ export async function notion(
 
   const question: string = request.query.get('question') || (await request.text());
   const workspace: string | null = request.query.get('workspace');
-  const password: string | null = request.query.get('password');
-
-  if (password !== process.env.NOTION_API_PASSWORD) {
-    return { status: 401, body: 'Unauthorized' };
-  }
 
   if (!question) {
     return { status: 400, body: 'Bad Request: question parameter is required' };
@@ -196,6 +191,6 @@ app.setup({ enableHttpStream: true });
 
 app.http('notion', {
   methods: ['GET', 'POST'],
-  authLevel: 'anonymous',
+  authLevel: 'function',
   handler: notion
 });
