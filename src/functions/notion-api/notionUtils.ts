@@ -44,14 +44,8 @@ export async function mapDBResponse(
         try {
           const properties = await getFormattedPageProperties(page, notionClient);
 
-          return (
-            properties
-              // remove undefined properties
-              .filter((property: string) => property !== undefined)
-
-              // join properties with newlines
-              .join('\n')
-          );
+          // Separate each property with a new line.
+          return properties.join('\n');
         } catch (error) {
           console.error(ERROR_PROCESSING_PAGE, error);
           return ERROR_PROCESSING_PAGE;
@@ -59,10 +53,9 @@ export async function mapDBResponse(
       })
     );
 
-    if (title) {
-      content.unshift(title);
-    }
+    if (title) content.unshift(title);
 
+    // Separate each page with two new lines.
     return content.join('\n\n');
   } catch (error) {
     console.error(ERROR_MAPPING_CONTENT, error);
@@ -82,20 +75,24 @@ async function getFormattedPageProperties(
 ): Promise<string[]> {
   const entries = Object.entries(page.properties);
 
-  const result = entries.map(async ([key, value]) => {
-    try {
-      const propertyValue = await formatProperty(value, notionClient);
+  const formattedProperties = await Promise.all(
+    entries.map(async ([key, value]) => {
+      try {
+        const propertyValue = await formatProperty(value, notionClient);
 
-      // Skip empty properties.
-      if (propertyValue === '') return;
+        // Skip empty properties.
+        if (!propertyValue) return '';
 
-      return `${key}: ${propertyValue}`;
-    } catch (error) {
-      console.error(`Error formatting property ${key} - Type=${value.type}`, error);
-      return `${key}: Error formatting property`;
-    }
-  });
-  return Promise.all(result);
+        return `${key}: ${propertyValue}`;
+      } catch (error) {
+        console.error(`Error formatting property ${key} - Type=${value.type}`, error);
+        return `${key}: Error formatting property`;
+      }
+    })
+  );
+
+  // Filter out empty strings
+  return formattedProperties.filter(Boolean);
 }
 
 /**
@@ -111,51 +108,82 @@ export async function mapBlockResponse(
   notionClient: Client,
   blockId?: string
 ): Promise<string> {
-  const titleResponse = blockId
-    ? ((await NotionService.fetchPageProperty(
-        notionClient,
-        blockId,
-        PropertyId.Title
-      )) as PropertyItemListResponse)
-    : null;
+  // Fetch the title if blockId is provided
+  const title = blockId ? await fetchBlockTitle(notionClient, blockId) : null;
 
-  const title = titleResponse
-    ? (
-        (titleResponse.results[0] as TitlePropertyItemObjectResponse)
-          .title as TextRichTextItemResponse
-      ).text.content
-    : null;
-
-  // Fetch content from each block
-  let content = await Promise.all(
-    response.results.map(async (block: any) => {
-      let blockContent = '';
-
-      if (block.type && block[block.type]?.rich_text) {
-        // Concatenate all the text objects into a single string.
-        blockContent = block[block.type].rich_text
-          .map((textObj: any) => textObj.plain_text)
-          .join('');
-      }
-
-      if (block.has_children) {
-        // Fetch the children block content recursively.
-        const childResponse = await NotionService.fetchPageContent(notionClient, block.id);
-        const childContent = await mapBlockResponse(childResponse, notionClient);
-
-        // Concatenate the child content to the parent content.
-        blockContent += '\n' + childContent;
-      }
-
-      return blockContent;
-    })
+  // Process each block in the response
+  const content = await Promise.all(
+    response.results.map(block => processBlock(block, notionClient))
   );
 
+  // Add title to content if it exists
   if (title) {
     content.unshift(title + '\n');
   }
 
-  return content.filter(text => text.trim() !== '').join('\n');
+  // Join non-empty content blocks with double newlines
+  return content.filter(text => text.trim()).join('\n\n');
+}
+
+/**
+ * Fetches the title of a block by its ID.
+ *
+ * @param notionClient - The Notion client instance.
+ * @param blockId - The block ID.
+ * @returns The title as a string.
+ */
+async function fetchBlockTitle(notionClient: Client, blockId: string): Promise<string | null> {
+  try {
+    const response = (await NotionService.fetchPageProperty(
+      notionClient,
+      blockId,
+      PropertyId.Title
+    )) as PropertyItemListResponse;
+    const titleItem = response.results[0] as TitlePropertyItemObjectResponse;
+    return (titleItem.title as TextRichTextItemResponse).text.content;
+  } catch (error) {
+    console.error(`Error fetching title for block ${blockId}`, error);
+    return null;
+  }
+}
+
+/**
+ * Processes an individual block, fetching its content and any children recursively.
+ *
+ * @param block - The block object.
+ * @param notionClient - The Notion client instance.
+ * @returns The processed block content as a string.
+ */
+async function processBlock(block: any, notionClient: Client): Promise<string> {
+  try {
+    // Get the content of the current block
+    let content = getBlockContent(block);
+
+    // If the block has children, fetch and append their content
+    if (block.has_children) {
+      const childResponse = await NotionService.fetchPageContent(notionClient, block.id);
+      const childContent = await mapBlockResponse(childResponse, notionClient);
+      content += `\n${childContent}`;
+    }
+
+    return content.trim();
+  } catch (error) {
+    console.error(`Error processing block ${block.id}`, error);
+    return '';
+  }
+}
+
+/**
+ * Extracts the text content from a block.
+ *
+ * @param block - The block object.
+ * @returns The text content as a string.
+ */
+function getBlockContent(block: any): string {
+  if (block.type && block[block.type]?.rich_text) {
+    return block[block.type].rich_text.map((textObj: any) => textObj.plain_text).join('');
+  }
+  return '';
 }
 
 /**
