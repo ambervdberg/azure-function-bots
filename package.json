@@ -10,6 +10,7 @@
   "scripts": {
     "prepare": "husky",
     "prebuild": "npm run lint",
+    "lint": "eslint --cache --fix",
     "build": "tsc",
     "watch": "tsc -w",
     "clean": "rimraf dist",
