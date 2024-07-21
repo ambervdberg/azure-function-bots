@@ -1,7 +1,6 @@
-
-export * from "./notion/database";
-export * from "./notion/page";
-export * from "./notion/search";
-export * from "./poem";
-export * from "./subject";
-
+export * from './notion-api/database';
+export * from './notion-api/page';
+export * from './notion-api/search';
+export * from './open-ai/notion';
+export * from './open-ai/poem';
+export * from './open-ai/subject';
