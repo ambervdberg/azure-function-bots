@@ -10,6 +10,7 @@ const API_BASE_URL = process.env.BASE_URL;
 const NOTION_SYSTEM_MESSAGE_EXTRACT_SEARCH_QUERY =
   process.env.NOTION_SYSTEM_MESSAGE_EXTRACT_SEARCH_QUERY;
 const NOTION_WORKSPACES = process.env.NOTION_WORKSPACES;
+const AZURE_FUNCTION_CODE = process.env.AZURE_FUNCTION_CODE;
 
 if (
   !OPENAI_API_KEY ||
@@ -17,7 +18,8 @@ if (
   !GPT_MODEL ||
   !API_BASE_URL ||
   !NOTION_SYSTEM_MESSAGE_EXTRACT_SEARCH_QUERY ||
-  !NOTION_WORKSPACES
+  !NOTION_WORKSPACES ||
+  !AZURE_FUNCTION_CODE
 ) {
   throw new Error('Missing required environment variables');
 }
@@ -176,7 +178,9 @@ async function extractSearchQuery(openAI: OpenAI, question: string): Promise<str
  * @returns The Notion context for the search query.
  */
 async function getNotionContext(query: string, workspace: string): Promise<Response> {
-  return await fetch(`${API_BASE_URL}/api/notion/search?workspace=${workspace}&query=${query}`);
+  return await fetch(
+    `${API_BASE_URL}/api/notion/search?workspace=${workspace}&query=${query}&code=${AZURE_FUNCTION_CODE}`
+  );
 }
 
 /**
