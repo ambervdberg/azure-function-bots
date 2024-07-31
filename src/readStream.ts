@@ -1,8 +1,8 @@
-import { InvocationContext } from "@azure/functions";
+import { InvocationContext } from '@azure/functions';
 
 /**
  * Creates a readable stream from a stream to return as response body
- * 
+ *
  * @param reader The stream reader.
  * @param context The context object.
  * @returns A readable stream.
@@ -12,7 +12,7 @@ export async function createStreamBody(reader, context): Promise<ReadableStream>
 
   return new ReadableStream({
     async start(controller) {
-      await readStream(reader, context, (chunk) => {
+      await readStream(reader, context, chunk => {
         const encodedChunk = encoder.encode(chunk);
         controller.enqueue(encodedChunk);
       });
@@ -23,7 +23,7 @@ export async function createStreamBody(reader, context): Promise<ReadableStream>
 
 /**
  * Reads a stream of data from a ReadableStreamDefaultReader and processes it.
- * 
+ *
  * @param reader - The ReadableStreamDefaultReader to read data from.
  * @param context - The InvocationContext object.
  * @param onChunk - A callback function to handle each chunk of data read from the stream.
@@ -31,8 +31,8 @@ export async function createStreamBody(reader, context): Promise<ReadableStream>
 async function readStream(
   reader: ReadableStreamDefaultReader<Uint8Array>,
   context: InvocationContext,
-  onChunk: (chunk: string) => void) {
-    
+  onChunk: (chunk: string) => void
+) {
   const decoder = new TextDecoder();
 
   try {
