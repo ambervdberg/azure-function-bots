@@ -2,6 +2,20 @@
 
 The Notion functions are used to retrieve content from the Notion workspace through the Notion API.
 
+This content will be given as context to OpenAI to generate a response.
+
+This is not always reliable, because the relevant context can not always be found in the Notion workspace.
+
+## Problem:
+
+Bottleneck here is the Notion API, which can only search for page and database titles and not for content. This is why relevant content can not always be found.
+
+## Possible solution:
+
+A possible future solution is to retrieve all the content from Notion and store it in a vector database periodically. And then use the vector database to search for relevant content.
+
+If that works well, then the vector database can be updated with new content every time a new page is created or updated through Notion webhooks. This would keep the vector database up to date with the Notion workspace.
+
 ## Functions
 
 ### search
@@ -14,7 +28,7 @@ Uses the page and database functions to retrieve the content.
 
 #### Parameters:
 
-- `workspace` (optional): The workspace to retrieve the page from. If not provided, the default workspace is used.
+- `workspace` (optional): The workspace to retrieve the page from. If not provided, the first known workspace is used.
 - `query`: The query to search for.
 
 ### page
@@ -26,7 +40,7 @@ Also retrieves the content of child content pages.
 
 #### Parameters:
 
-- `workspace` (optional): The workspace to retrieve the page from. If not provided, the default workspace is used.
+- `workspace` (optional): The workspace to retrieve the page from. If not provided, the first known workspace is used.
 - `id`: The ID of the page to retrieve.
 
 #### Returns:
