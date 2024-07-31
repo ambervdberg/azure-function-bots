@@ -1,6 +1,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
 import OpenAI from 'openai';
 import { createStreamBody } from '../../readStream';
+import { ConfigurationError } from '../configuration-error';
 
 // Validate environment variables
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -21,7 +22,7 @@ if (
   !NOTION_WORKSPACES ||
   !AZURE_FUNCTION_CODE
 ) {
-  throw new Error('Missing required environment variables');
+  throw new ConfigurationError();
 }
 
 /**

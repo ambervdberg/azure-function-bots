@@ -1,5 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
 import OpenAI from 'openai';
+import { ConfigurationError } from '../configuration-error';
 
 // Validate environment variables
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -8,7 +9,7 @@ const SUBJECT_USER_MESSAGE = process.env.SUBJECT_USER_MESSAGE;
 const GPT_MODEL = process.env.GPT_MODEL;
 
 if (!OPENAI_API_KEY || !SUBJECT_SYSTEM_MESSAGE || !GPT_MODEL || !SUBJECT_USER_MESSAGE) {
-  throw new Error('Missing required environment variables');
+  throw new ConfigurationError();
 }
 
 /**

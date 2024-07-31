@@ -2,6 +2,7 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/fu
 import OpenAI from 'openai';
 
 import { createStreamBody } from '../../readStream';
+import { ConfigurationError } from '../configuration-error';
 
 // Validate environment variables
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -9,7 +10,7 @@ const POEM_SYSTEM_MESSAGE = process.env.POEM_SYSTEM_MESSAGE;
 const GPT_MODEL = process.env.GPT_MODEL;
 
 if (!OPENAI_API_KEY || !POEM_SYSTEM_MESSAGE || !GPT_MODEL) {
-  throw new Error('Missing required environment variables');
+  throw new ConfigurationError();
 }
 
 /**
