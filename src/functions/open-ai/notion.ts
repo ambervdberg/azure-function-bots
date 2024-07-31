@@ -56,11 +56,19 @@ export async function notion(
     const query: string = await extractSearchQuery(openAI, question);
     context.log('search query', query);
 
-    let notionSearchResponse = await searchNotion(query, workspace);
+    let notionSearchResponse = await searchNotion(query, context, workspace);
 
     // Return an error response if the search query does not return any information.
     if (!notionSearchResponse.ok) {
       context.log(`Error: ${notionSearchResponse.status} - ${notionSearchResponse.statusText}`);
+
+      if (notionSearchResponse.status === 404) {
+        return {
+          status: 200,
+          body: 'No relevant information found in Notion'
+        };
+      }
+
       return {
         status: notionSearchResponse.status,
         body: `Error: ${notionSearchResponse.statusText}`
@@ -117,27 +125,35 @@ export async function notion(
  * @param givenWorkspace The workspace to search in. If not provided, the function will try all workspaces one by one until it finds relevant information.
  * @returns The response from the Notion API.
  */
-async function searchNotion(query: string, givenWorkspace?: string): Promise<Response> {
-  const workspaces = getWorkspaces();
+async function searchNotion(
+  query: string,
+  context: InvocationContext,
+  givenWorkspace?: string
+): Promise<Response> {
+  const workspaces: string[] = getWorkspaces();
+  let notionSearchResponse: Response;
+  context.log(`Searching for query: ${query}`);
 
-  let workspaceIndex = 0;
-
-  let workspace = givenWorkspace ?? workspaces[workspaceIndex];
-
-  let notionSearchResponse = await getNotionContext(query, workspace);
-
-  // Return the response directly if a specific workspace to search in is given.
+  // If a specific workspace is given, search in that workspace and return the result.
   if (givenWorkspace) {
+    context.log(`Searching in given workspace: ${givenWorkspace}`);
+    notionSearchResponse = await getNotionContext(query, givenWorkspace);
     return notionSearchResponse;
   }
 
-  // Keep trying with other available workspaces if no relevant content is found and no specific workspace is given.
-  while (notionSearchResponse.status === 404 && workspaceIndex < workspaces.length - 1) {
-    workspaceIndex++;
-    workspace = workspaces[workspaceIndex];
-    notionSearchResponse = await getNotionContext(query, workspace);
+  // Iterate through the available workspaces to find relevant content.
+  for (let workspaceIndex = 0; workspaceIndex < workspaces.length; workspaceIndex++) {
+    context.log(`Searching in workspace: ${workspaces[workspaceIndex]}`);
+    notionSearchResponse = await getNotionContext(query, workspaces[workspaceIndex]);
+
+    // If content is found, return the response.
+    if (notionSearchResponse.status === 200) {
+      return notionSearchResponse;
+    }
   }
 
+  // If no relevant content is found, return the last response (404).
+  context.log(`No information found in any workspace`);
   return notionSearchResponse;
 }
 
