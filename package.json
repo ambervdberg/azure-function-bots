@@ -26,16 +26,16 @@
     "openai": "^4.53.2"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
+    "@types/node": "^22.0.1",
     "eslint": "^9.7.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
-    "husky": "^9.1.1",
+    "husky": "^9.1.4",
     "lint-staged": "^15.2.7",
     "prettier": "^3.3.3",
     "rimraf": "^6.0.1",
     "typescript": "^5.5.4",
-    "typescript-eslint": "8.0.0-alpha.10"
+    "typescript-eslint": "8.0.0"
   },
   "main": "dist/src/functions/index.js"
 }
