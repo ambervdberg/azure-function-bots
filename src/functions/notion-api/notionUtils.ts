@@ -14,7 +14,7 @@ import { PropertyId } from './property-id.enum';
 
 const NOTION_WORKSPACES = process.env.NOTION_WORKSPACES;
 
-if (NOTION_WORKSPACES) {
+if (!NOTION_WORKSPACES) {
   throw new ConfigurationError();
 }
 
