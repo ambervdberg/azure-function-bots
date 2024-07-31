@@ -9,14 +9,16 @@ This project contains serverless Azure Functions that interact with the OpenAI A
   - Supports: [chat.comletions](https://platform.openai.com/docs/api-reference/chat) with streamed and non streamed responses.
   - Other components of the OpenAI API will be added later with different bots.
 - **Integration with Notion.** [Notion Readme](src/functions/notion-api/notion.md)
+- **Authentication**: Authenticate the user for Azure Functions.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Azure account and Azure Functions development setup.
+- Azure account and Azure Functions development setup if you want to to deploy the functions.
 - Node.js installed on your machine.
 - An OpenAI API key.
+- For the Notion API, you need a Notion API key and a workspace. You can connect multiple workspaces if you like.
 
 ### Setup
 
@@ -25,7 +27,7 @@ This project contains serverless Azure Functions that interact with the OpenAI A
    ```bash
    npm install
    ```
-3. Create a local.settings.json
+3. Create a **local.settings.json**
 
    1. Add your **openai api key**
    2. Adjust everything as you like.
@@ -34,19 +36,34 @@ This project contains serverless Azure Functions that interact with the OpenAI A
    {
      "IsEncrypted": false,
      "Values": {
-       "BASE_URL": "http://localhost:7071",
        "AzureWebJobsFeatureFlags": "EnableWorkerIndexing",
        "AzureWebJobsStorage": "UseDevelopmentStorage=true",
        "FUNCTIONS_WORKER_RUNTIME": "node",
+
+       // Base URL for the functions. In production, this should be the Azure URL.
+       "BASE_URL": "http://localhost:7071",
+
+       // Notion workspaces
+       "NOTION_WORKSPACES": "MYWORKSPACE,WORK",
+
+       // Notion API key for each workspace you want to connect.
        "NOTION_API_KEY_MYWORKSPACE": "secret_1234567890abcdefghijkl",
        "NOTION_API_KEY_WORK": "secret_1234567890abcdefghijkl",
-       "NOTION_DEFAULT_WORKSPACE": "MYWORKSPACE",
+
+       // Allowed email that may access the Azure functions. Set this to your google email address.
+       "ALLOWED_EMAIL": "jane-doe@email.com",
+
+       "OPENAI_API_KEY": "your-open-api-key",
+
+       // System messages for the Notion bots
        "NOTION_SYSTEM_MESSAGE": "You are an assistant that will use the given context to answer the user question.",
        "NOTION_SYSTEM_MESSAGE_EXTRACT_SEARCH_QUERY": "It is your job to create a search query from the user question to use with the notion.search API. The query must only contain the most important keywords from the question. Preferably not more than one or two. The Notion API searches for page titles. So if a user question would be: \"Which companies are in Amsterdam?\", it's best to search for the word Companies, because that is more likely to be a page title than company. Escape the result so it can be used in a url. Don't add quotes around the query.",
-       "NOTION_WORKSPACES": "MYWORKSPACE,WORK",
-       "OPENAI_API_KEY": "your-open-api-key",
+
+       // System messages for the Poem bot
        "POEM_SYSTEM_MESSAGE": "You are a master poet. Your answers should be concise, and less than 50 words. Format the output in HTML without head or body. Make it look nice and easy to read. The subject of the poem will be provided by the user. It must always be related to information technology. Make the poem light-hearted and funny.",
        "SUBJECT_SYSTEM_MESSAGE": "You are a master poet prompt engineer. You will create a prompt for a short poem. The subject must always be about software engineering and funny. The response must be a single line without formatting.",
+
+       // User message for the Poem bot
        "SUBJECT_USER_MESSAGE": "Give me a prompt for a short poem"
      },
      "Host": {
@@ -84,3 +101,22 @@ This project contains serverless Azure Functions that interact with the OpenAI A
   - Parameters:
     - `workspace` (optional): The workspace to retrieve the page from. If not provided, all workspaces are tried one by one until a result is found.
     - `question`: The question to search for.
+
+#### Authentication
+
+- **auth-google**: http://localhost:7071/api/auth-google
+  - Parameters:
+    - `access_token`: The code from the Google OAuth2 response.
+  - Returns:
+    - The Azure code needed to access the Azure Functions with auth level 'function'.
+
+## Client
+
+You can connect the functions to any client you wish.
+
+### Example implementation
+
+Here is an example implementation created with Lit Element and TypeScript:
+
+- Github: [ambervdberg/ai-bots](https://github.com/ambervdberg/ai-bots)
+- Demo: https://ambervdberg.github.io/ai-bots/

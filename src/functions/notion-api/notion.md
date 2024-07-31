@@ -42,5 +42,5 @@ Also retrieves titles of related databases.
 
 #### Parameters:
 
-- `workspace` (optional): The workspace to retrieve the page from. If not provided, the default workspace is used.
+- `workspace` (optional): The workspace to retrieve the page from. If not provided, the first known workspace is used. - _from the 'NOTION_WORKSPACES' environment variable_.
 - `id`: The ID of the database to retrieve.
