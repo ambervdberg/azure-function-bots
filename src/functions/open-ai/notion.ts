@@ -2,6 +2,7 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/fu
 import OpenAI from 'openai';
 import { createStreamBody } from '../../readStream';
 import { ConfigurationError } from '../configuration-error';
+import { getWorkspaces } from '../notion-api/notionUtils';
 
 // Validate environment variables
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -10,7 +11,6 @@ const GPT_MODEL = process.env.GPT_MODEL;
 const API_BASE_URL = process.env.BASE_URL;
 const NOTION_SYSTEM_MESSAGE_EXTRACT_SEARCH_QUERY =
   process.env.NOTION_SYSTEM_MESSAGE_EXTRACT_SEARCH_QUERY;
-const NOTION_WORKSPACES = process.env.NOTION_WORKSPACES;
 const AZURE_FUNCTION_CODE = process.env.AZURE_FUNCTION_CODE;
 
 if (
@@ -19,7 +19,6 @@ if (
   !GPT_MODEL ||
   !API_BASE_URL ||
   !NOTION_SYSTEM_MESSAGE_EXTRACT_SEARCH_QUERY ||
-  !NOTION_WORKSPACES ||
   !AZURE_FUNCTION_CODE
 ) {
   throw new ConfigurationError();
@@ -182,14 +181,6 @@ async function getNotionContext(query: string, workspace: string): Promise<Respo
   return await fetch(
     `${API_BASE_URL}/api/notion/search?workspace=${workspace}&query=${query}&code=${AZURE_FUNCTION_CODE}`
   );
-}
-
-/**
- * Get the workspaces which are available for searching.
- * @returns The workspaces to search in.
- */
-function getWorkspaces(): string[] {
-  return NOTION_WORKSPACES.split(',');
 }
 
 app.setup({ enableHttpStream: true });

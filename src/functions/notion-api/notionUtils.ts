@@ -8,8 +8,15 @@ import {
   TitlePropertyItemObjectResponse
 } from '@notionhq/client/build/src/api-endpoints';
 
+import { ConfigurationError } from '../configuration-error';
 import { NotionService } from './notion.service';
 import { PropertyId } from './property-id.enum';
+
+const NOTION_WORKSPACES = process.env.NOTION_WORKSPACES;
+
+if (NOTION_WORKSPACES) {
+  throw new ConfigurationError();
+}
 
 // Constants
 const ERROR_MAPPING_CONTENT = 'Error mapping content';
@@ -18,11 +25,20 @@ const UNKNOWN_TYPE = 'Unknown Type';
 const NO_TITLE = 'No Title';
 
 // Get Notion API key based on workspace
-export function getNotionApiKey(workspace: string): string {
+export function getNotionApiKey(workspace?: string): string {
   if (!workspace) {
-    return process.env[`NOTION_API_KEY_${process.env.NOTION_DEFAULT_WORKSPACE}`]!;
+    // Get the api key for the first workspace if no workspace is provided
+    return process.env[`NOTION_API_KEY_${getWorkspaces()[0]}`]!;
   }
   return process.env[`NOTION_API_KEY_${workspace.toUpperCase()}`]!;
+}
+
+/**
+ * Get the workspaces which are available for searching.
+ * @returns The workspaces to search in.
+ */
+export function getWorkspaces(): string[] {
+  return NOTION_WORKSPACES.split(',');
 }
 
 /**
