@@ -241,6 +241,8 @@ async function formatProperty(property: any, notionClient: Client): Promise<stri
       return property.created_time ?? ''; // TODO: format date time
     case 'created_by':
       return property.name ?? '';
+    case 'checkbox':
+      return property.checkbox ? 'V' : 'X';
     default:
       console.warn(`Unknown property type: ${property.type}`);
       return UNKNOWN_TYPE;
