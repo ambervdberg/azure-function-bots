@@ -6,6 +6,7 @@
     "name": "Amber van den Berg",
     "email": "amber.vdberg.01@gmail.com"
   },
+  "homepage": "https://ambervdb.github.io/ai-bots/",
   "license": "MIT",
   "scripts": {
     "prepare": "husky",
