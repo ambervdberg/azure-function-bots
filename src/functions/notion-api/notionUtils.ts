@@ -156,7 +156,7 @@ async function fetchBlockTitle(notionClient: Client, blockId: string): Promise<s
       PropertyId.Title
     )) as PropertyItemListResponse;
     const titleItem = response.results[0] as TitlePropertyItemObjectResponse;
-    return (titleItem.title as TextRichTextItemResponse).text.content;
+    return (titleItem?.title as TextRichTextItemResponse)?.text?.content;
   } catch (error) {
     console.error(`Error fetching title for block ${blockId}`, error);
     return null;
@@ -212,7 +212,7 @@ function getBlockContent(block: any): string {
 async function formatProperty(property: any, notionClient: Client): Promise<string> {
   switch (property.type) {
     case 'title':
-      return property.title.map((t: any) => t.plain_text).join('');
+      return property.title?.map((t: any) => t.plain_text).join('');
     case 'rich_text':
       return property.rich_text.map((t: any) => t.plain_text).join('');
     case 'select':
@@ -230,7 +230,7 @@ async function formatProperty(property: any, notionClient: Client): Promise<stri
     case 'relation':
       return await getRelatedPageTitles(property.relation, notionClient);
     case 'people':
-      return property.people.map((person: any) => person.name).join(', ');
+      return property.people?.map((person: any) => person.name).join(', ');
     case 'status':
       return property.status.name;
     case 'last_edited_by':
@@ -243,6 +243,10 @@ async function formatProperty(property: any, notionClient: Client): Promise<stri
       return property.name ?? '';
     case 'checkbox':
       return property.checkbox ? 'V' : 'X';
+    case 'number':
+      return property.number?.toString();
+    case 'verification':
+      return property.verification?.state;
     default:
       console.warn(`Unknown property type: ${property.type}`);
       return UNKNOWN_TYPE;

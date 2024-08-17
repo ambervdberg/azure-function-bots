@@ -7,6 +7,7 @@ import {
 } from '@notionhq/client/build/src/api-endpoints';
 
 import { PropertyId } from './property-id.enum';
+import { sharedRateLimiter } from './rate-limiter';
 
 export class NotionService {
   /**
@@ -20,9 +21,12 @@ export class NotionService {
     databaseId: string
   ): Promise<QueryDatabaseResponse> {
     try {
-      const response: QueryDatabaseResponse = await notionClient.databases.query({
-        database_id: databaseId
+      const response: QueryDatabaseResponse = await sharedRateLimiter.enqueue(async () => {
+        return notionClient.databases.query({
+          database_id: databaseId
+        });
       });
+
       return response;
     } catch (error) {
       throw new Error(`Failed to fetch database content: ${error.message}`);
@@ -36,7 +40,9 @@ export class NotionService {
    * @returns The page object response from the Notion API.
    */
   static async getPage(notionClient: Client, pageId: string): Promise<PageObjectResponse> {
-    return (await notionClient.pages.retrieve({ page_id: pageId })) as PageObjectResponse;
+    return (await sharedRateLimiter.enqueue(async () => {
+      return notionClient.pages.retrieve({ page_id: pageId });
+    })) as PageObjectResponse;
   }
 
   /**
@@ -50,11 +56,29 @@ export class NotionService {
     pageId: string
   ): Promise<ListBlockChildrenResponse> {
     try {
-      const response: ListBlockChildrenResponse = await notionClient.blocks.children.list({
-        block_id: pageId,
-        page_size: 100
+      const response: ListBlockChildrenResponse = await sharedRateLimiter.enqueue(async () => {
+        return notionClient.blocks.children.list({
+          block_id: pageId,
+          page_size: 100
+        });
       });
       return response;
+    } catch (error) {
+      throw new Error(`Failed to fetch page content: ${error.message}`);
+    }
+  }
+
+  /**
+   * Fetches everything from the Notion workspace.
+   *
+   * @param notionClient - The Notion client instance.
+   * @returns The search response from the Notion API.
+   */
+  static async fetchAll(notionClient: Client): Promise<any> {
+    try {
+      return await sharedRateLimiter.enqueue(async () => {
+        return notionClient.search({});
+      });
     } catch (error) {
       throw new Error(`Failed to fetch page content: ${error.message}`);
     }
@@ -73,11 +97,12 @@ export class NotionService {
     propertyType: PropertyId
   ): Promise<GetPagePropertyResponse> {
     try {
-      const response: GetPagePropertyResponse = await notionClient.pages.properties.retrieve({
-        page_id: pageId,
-        property_id: propertyType
+      return sharedRateLimiter.enqueue(async () => {
+        return notionClient.pages.properties.retrieve({
+          page_id: pageId,
+          property_id: propertyType
+        });
       });
-      return response;
     } catch (error) {
       throw new Error(`Failed to fetch page property: ${error.message}`);
     }

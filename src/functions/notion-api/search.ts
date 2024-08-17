@@ -7,6 +7,7 @@ import {
 
 import { NotionService } from './notion.service';
 import { getNotionApiKey, mapBlockResponse, mapDBResponse } from './notionUtils';
+import { sharedRateLimiter } from './rate-limiter';
 
 const UNAUTHORIZED = 'Unauthorized: API key not found';
 const BAD_REQUEST_QUERY = 'Bad Request: Query parameter is required';
@@ -42,13 +43,19 @@ export async function search(
   const notion = new Client({ auth: apiKey });
 
   try {
-    const response = await notion.search({
-      query,
-      sort: {
-        direction: 'ascending',
-        timestamp: 'last_edited_time'
-      }
+    let response = await sharedRateLimiter.enqueue(async () => {
+      return notion.search({
+        query,
+        sort: {
+          direction: 'ascending',
+          timestamp: 'last_edited_time'
+        }
+      });
     });
+
+    if (response.results.length === 0) {
+      response = await NotionService.fetchAll(notion);
+    }
 
     if (raw) {
       return { status: 200, jsonBody: response };
@@ -56,7 +63,7 @@ export async function search(
 
     const contentArray = await Promise.all(
       response.results.map(async (result: PageObjectResponse | DatabaseObjectResponse) => {
-        return await getContent(result, notion);
+        return getContent(result, notion);
       })
     );
 
