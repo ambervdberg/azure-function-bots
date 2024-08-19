@@ -24,7 +24,7 @@
   "dependencies": {
     "@azure/functions": "^4.5.0",
     "@notionhq/client": "^2.2.15",
-    "openai": "^4.53.2"
+    "openai": "^4.56.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.1",
