@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@azure/functions": "^4.9.0",
-    "@notionhq/client": "^4.x.x",
+    "@notionhq/client": "^5.x.x",
     "openai": "^6.9.1"
   },
   "devDependencies": {
