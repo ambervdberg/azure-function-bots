@@ -22,7 +22,7 @@
     "prettier": "prettier --config .prettierrc --write ."
   },
   "dependencies": {
-    "@azure/functions": "^4.9.0",
+    "@azure/functions": "^4.10.0",
     "@notionhq/client": "^4.x.x",
     "openai": "^6.9.1"
   },
