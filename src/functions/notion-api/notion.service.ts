@@ -1,16 +1,39 @@
 import { Client } from '@notionhq/client';
 import {
+  DatabaseObjectResponse,
+  GetDatabaseResponse,
   GetPagePropertyResponse,
   ListBlockChildrenResponse,
   PageObjectResponse,
-  QueryDatabaseResponse
+  QueryDataSourceResponse
 } from '@notionhq/client/build/src/api-endpoints';
 
 import { PropertyId } from './property-id.enum';
 
+/** Provides shared access helpers for Notion API operations. */
 export class NotionService {
   /**
-   * Fetches the content of a Notion database.
+   * Fetches the content of a Notion data source.
+   * @param notionClient - The Notion client instance.
+   * @param dataSourceId - The ID of the data source to query.
+   * @returns The query response from the Notion API.
+   */
+  static async fetchDataSourceContent(
+    notionClient: Client,
+    dataSourceId: string
+  ): Promise<QueryDataSourceResponse> {
+    try {
+      const response: QueryDataSourceResponse = await notionClient.dataSources.query({
+        data_source_id: dataSourceId
+      });
+      return response;
+    } catch (error) {
+      throw new Error(`Failed to fetch data source content: ${getErrorMessage(error)}`);
+    }
+  }
+
+  /**
+   * Fetches the content of the default data source for a database.
    * @param notionClient - The Notion client instance.
    * @param databaseId - The ID of the database to query.
    * @returns The query response from the Notion API.
@@ -18,14 +41,12 @@ export class NotionService {
   static async fetchDatabaseContent(
     notionClient: Client,
     databaseId: string
-  ): Promise<QueryDatabaseResponse> {
+  ): Promise<QueryDataSourceResponse> {
     try {
-      const response: QueryDatabaseResponse = await notionClient.databases.query({
-        database_id: databaseId
-      });
-      return response;
+      const dataSourceId = await this.getDefaultDataSourceId(notionClient, databaseId);
+      return await this.fetchDataSourceContent(notionClient, dataSourceId);
     } catch (error) {
-      throw new Error(`Failed to fetch database content: ${error.message}`);
+      throw new Error(`Failed to fetch database content: ${getErrorMessage(error)}`);
     }
   }
 
@@ -56,7 +77,7 @@ export class NotionService {
       });
       return response;
     } catch (error) {
-      throw new Error(`Failed to fetch page content: ${error.message}`);
+      throw new Error(`Failed to fetch page content: ${getErrorMessage(error)}`);
     }
   }
 
@@ -79,7 +100,72 @@ export class NotionService {
       });
       return response;
     } catch (error) {
-      throw new Error(`Failed to fetch page property: ${error.message}`);
+      throw new Error(`Failed to fetch page property: ${getErrorMessage(error)}`);
     }
+  }
+
+  /**
+   * Resolves the default data source ID for a database.
+   * @param notionClient - The Notion client instance.
+   * @param databaseId - The ID of the database.
+   * @returns The default data source ID.
+   */
+  static async getDefaultDataSourceId(notionClient: Client, databaseId: string): Promise<string> {
+    try {
+      const response = await notionClient.databases.retrieve({ database_id: databaseId });
+      return getDefaultDataSourceId(response, databaseId);
+    } catch (error) {
+      throw new Error(`Failed to resolve database data source: ${getErrorMessage(error)}`);
+    }
+  }
+}
+
+/**
+ * Extracts the default data source ID from a database response.
+ * @param response - The database response from the Notion API.
+ * @param databaseId - The ID of the database being resolved.
+ * @returns The default data source ID.
+ */
+function getDefaultDataSourceId(response: GetDatabaseResponse, databaseId: string): string {
+  if (!isFullDatabaseResponse(response)) {
+    throw new Error(`Database ${databaseId} could not be fully retrieved`);
+  }
+
+  const defaultDataSource = response.data_sources[0];
+
+  if (!defaultDataSource) {
+    throw new Error(`Database ${databaseId} does not contain a data source`);
+  }
+
+  return defaultDataSource.id;
+}
+
+/**
+ * Checks whether a database response includes full database details.
+ * @param response - The database response from the Notion API.
+ * @returns True when the response is a full database object.
+ */
+function isFullDatabaseResponse(response: GetDatabaseResponse): response is DatabaseObjectResponse {
+  return 'data_sources' in response;
+}
+
+/**
+ * Maps unknown errors to a stable message string.
+ * @param error - The thrown error.
+ * @returns The error message.
+ */
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return 'Unknown error';
   }
 }

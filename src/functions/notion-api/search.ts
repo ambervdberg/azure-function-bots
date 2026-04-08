@@ -1,18 +1,25 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
 import { Client } from '@notionhq/client';
 import {
-  DatabaseObjectResponse,
-  PageObjectResponse
+  DataSourceObjectResponse,
+  PageObjectResponse,
+  PartialDataSourceObjectResponse,
+  PartialPageObjectResponse
 } from '@notionhq/client/build/src/api-endpoints';
 
 import { NotionService } from './notion.service';
-import { getNotionApiKey, mapBlockResponse, mapDBResponse } from './notionUtils';
+import { getNotionApiKey, mapBlockResponse, mapDataSourceResponse } from './notionUtils';
 
 const UNAUTHORIZED = 'Unauthorized: API key not found';
 const BAD_REQUEST_QUERY = 'Bad Request: Query parameter is required';
 const NOT_FOUND_RESULTS = 'Not Found: No results found';
 const INTERNAL_SERVER_ERROR = 'Internal Server Error';
 const BAD_REQUEST_UNKNOWN_OBJECT = 'Bad Request: Unknown object type';
+type SearchResult =
+  | PageObjectResponse
+  | PartialPageObjectResponse
+  | DataSourceObjectResponse
+  | PartialDataSourceObjectResponse;
 
 /**
  * Searches for content in Notion.
@@ -55,7 +62,7 @@ export async function search(
     }
 
     const contentArray = await Promise.all(
-      response.results.map(async (result: PageObjectResponse | DatabaseObjectResponse) => {
+      response.results.map(async (result: SearchResult) => {
         return await getContent(result, notion);
       })
     );
@@ -68,7 +75,7 @@ export async function search(
 
     return { status: 200, body: content };
   } catch (error) {
-    context.error(`Error fetching Notion content: ${error.message}`);
+    context.error(`Error fetching Notion content: ${getErrorMessage(error)}`);
     return { status: 500, body: INTERNAL_SERVER_ERROR };
   }
 }
@@ -79,15 +86,12 @@ export async function search(
  * @param notion - The Notion client instance.
  * @returns The content as a formatted string or an error message.
  */
-async function getContent(
-  result: PageObjectResponse | DatabaseObjectResponse,
-  notion: Client
-): Promise<string> {
+async function getContent(result: SearchResult, notion: Client): Promise<string> {
   try {
-    // Fetch the content of a database.
-    if (result.object === 'database') {
-      const response = await NotionService.fetchDatabaseContent(notion, result.id);
-      return await mapDBResponse(response, notion);
+    // Fetch the content of a data source.
+    if (result.object === 'data_source') {
+      const response = await NotionService.fetchDataSourceContent(notion, result.id);
+      return await mapDataSourceResponse(response, notion);
 
       // Fetch the content of a page.
     } else if (result.object === 'page') {
@@ -98,9 +102,30 @@ async function getContent(
     }
   } catch (error) {
     console.error(
-      `Error processing Notion content for ${result.object} with id ${result.id}: ${error.message}`
+      `Error processing Notion content for ${result.object} with id ${result.id}: ${getErrorMessage(error)}`
     );
     return `Error processing content for ${result.object} with id ${result.id}`;
+  }
+}
+
+/**
+ * Maps unknown errors to a stable message string.
+ * @param error - The thrown error.
+ * @returns The error message.
+ */
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return 'Unknown error';
   }
 }
 

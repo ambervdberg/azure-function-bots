@@ -2,7 +2,7 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/fu
 import { Client } from '@notionhq/client';
 
 import { NotionService } from './notion.service';
-import { getNotionApiKey, mapDBResponse } from './notionUtils';
+import { getNotionApiKey, mapDataSourceResponse } from './notionUtils';
 
 // Constants
 const UNAUTHORIZED = 'Unauthorized: API key not found';
@@ -49,14 +49,14 @@ export async function getDatabase(
     }
 
     try {
-      const content = await mapDBResponse(response, notion);
+      const content = await mapDataSourceResponse(response, notion);
       return { status: 200, body: content };
     } catch (error) {
-      context.error(`Error mapping Notion content: ${error.message}`);
+      context.error(`Error mapping Notion content: ${getErrorMessage(error)}`);
       return { status: 500, body: INTERNAL_SERVER_ERROR };
     }
   } catch (error) {
-    context.error(`Error fetching Notion database: ${error.message}`);
+    context.error(`Error fetching Notion database: ${getErrorMessage(error)}`);
     return { status: 500, body: INTERNAL_SERVER_ERROR };
   }
 }
@@ -69,3 +69,24 @@ app.http('database', {
   route: 'notion/database',
   handler: getDatabase
 });
+
+/**
+ * Maps unknown errors to a stable message string.
+ * @param error - The thrown error.
+ * @returns The error message.
+ */
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return 'Unknown error';
+  }
+}
