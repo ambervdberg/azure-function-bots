@@ -22,21 +22,21 @@
     "prettier": "prettier --config .prettierrc --write ."
   },
   "dependencies": {
-    "@azure/functions": "^4.9.0",
-    "@notionhq/client": "^4.x.x",
-    "openai": "^6.15.0"
+    "@azure/functions": "^4.12.0",
+    "@notionhq/client": "^5.17.0",
+    "openai": "^6.33.0"
   },
   "devDependencies": {
-    "@types/node": "^24.10.1",
-    "eslint": "^9.39.1",
+    "@types/node": "^24.12.2",
+    "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-prettier": "^5.5.5",
     "husky": "^9.1.7",
-    "lint-staged": "^16.2.7",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.7.4",
-    "rimraf": "^6.1.2",
+    "rimraf": "^6.1.3",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.50.0"
+    "typescript-eslint": "^8.58.1"
   },
   "main": "dist/src/functions/index.js"
 }
