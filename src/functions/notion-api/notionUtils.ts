@@ -2,8 +2,9 @@ import { Client } from '@notionhq/client';
 import {
   ListBlockChildrenResponse,
   PageObjectResponse,
+  PartialPageObjectResponse,
   PropertyItemListResponse,
-  QueryDatabaseResponse,
+  QueryDataSourceResponse,
   TextRichTextItemResponse,
   TitlePropertyItemObjectResponse
 } from '@notionhq/client/build/src/api-endpoints';
@@ -42,21 +43,22 @@ export function getWorkspaces(): string[] {
 }
 
 /**
- * Maps the database response from the Notion API to a formatted string.
+ * Maps the data source response from the Notion API to a formatted string.
  *
- * @param response - The database response from the Notion API.
+ * @param response - The data source response from the Notion API.
  * @param notionClient - The Notion client instance.
  * @param title - Optional title for the content.
  * @returns The content as a formatted string.
  */
-export async function mapDBResponse(
-  response: QueryDatabaseResponse,
+export async function mapDataSourceResponse(
+  response: QueryDataSourceResponse,
   notionClient: Client,
   title?: string
 ): Promise<string> {
   try {
+    const pages = getFullPageResults(response.results);
     const content = await Promise.all(
-      response.results.map(async (page: PageObjectResponse) => {
+      pages.map(async page => {
         try {
           const properties = await getFormattedPageProperties(page, notionClient);
 
@@ -290,4 +292,26 @@ async function getRelatedPageTitles(relations: any[], notionClient: any): Promis
  */
 function findKeyWithTitleType(page: PageObjectResponse): string {
   return Object.keys(page.properties).find(key => page.properties[key].type === PropertyId.Title);
+}
+
+/**
+ * Filters query results to full page objects.
+ *
+ * @param results - The query results from a Notion data source.
+ * @returns The full page objects.
+ */
+function getFullPageResults(results: QueryDataSourceResponse['results']): PageObjectResponse[] {
+  return results.filter(isFullPageObjectResponse);
+}
+
+/**
+ * Checks whether a page response contains full page details.
+ *
+ * @param page - The page response to evaluate.
+ * @returns True when the page is a full page object.
+ */
+function isFullPageObjectResponse(
+  page: PageObjectResponse | PartialPageObjectResponse
+): page is PageObjectResponse {
+  return 'parent' in page;
 }

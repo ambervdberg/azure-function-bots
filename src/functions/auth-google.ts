@@ -23,8 +23,8 @@ export async function authGoogle(
 ): Promise<HttpResponseInit> {
   context.log(`Http function processed request for url "${request.url}"`);
 
-  // Get the access token from the query or the request body
-  const accessToken = request.query.get('access_token') || (await request.text());
+  // Get the access token from the Authorization header
+  const accessToken = request.headers.get('authorization')?.replace('Bearer ', '');
 
   try {
     // Fetch the user profile using the access token
