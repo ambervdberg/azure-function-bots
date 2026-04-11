@@ -8,6 +8,7 @@ import { ConfigurationError } from '../configuration-error';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const POEM_SYSTEM_MESSAGE = process.env.POEM_SYSTEM_MESSAGE;
 const GPT_MODEL = process.env.GPT_MODEL;
+const SUBJECT_ARRAY = process.env.SUBJECT_ARRAY;
 
 if (!OPENAI_API_KEY || !POEM_SYSTEM_MESSAGE || !GPT_MODEL) {
   throw new ConfigurationError();
@@ -34,9 +35,7 @@ export async function poem(
   });
 
   const message =
-    request.query.get('message') ||
-    (await request.text()) ||
-    'A competent female software developer';
+    request.query.get('message') || (await request.text()) || pickSubjectFromOptions();
 
   const completion = await openAI.chat.completions.create({
     messages: [
@@ -58,6 +57,21 @@ export async function poem(
   const body = (await createStreamBody(reader, context)) as any;
 
   return { body };
+}
+
+function pickSubjectFromOptions() {
+  const fallback = 'AI takeover';
+
+  if (!SUBJECT_ARRAY) return fallback;
+
+  const subjects = SUBJECT_ARRAY.split('|').filter(s => s.trim());
+
+  if (subjects.length === 0) return fallback;
+
+  // Pick a random subject from the list
+  const subject = subjects[Math.floor(Math.random() * subjects.length)];
+
+  return subject;
 }
 
 app.setup({ enableHttpStream: true });
